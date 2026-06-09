@@ -1,0 +1,177 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=Syne:wght@400..800&display=swap');
+
+:root {
+  --bg-primary: #0A0A0F;
+  --bg-card: #12121A;
+  --bg-elevated: #1C1C28;
+  --accent-blue: #3B82F6;
+  --accent-purple: #6366F1;
+  --accent-blue-glow: rgba(59, 130, 246, 0.12);
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  
+  --font-display: 'Syne', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --font-body: 'DM Sans', sans-serif;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+/* Custom Typography Helpers */
+.font-syne {
+  font-family: var(--font-display);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+/* Grid Pattern Background */
+.bg-grid-pattern {
+  background-image: radial-gradient(rgba(59, 130, 246, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Custom premium card design */
+.premium-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease-in-out;
+}
+
+.premium-card:hover {
+  border-color: rgba(59, 130, 246, 0.2);
+  box-shadow: 0 8px 40px rgba(59, 130, 246, 0.06);
+}
+
+.premium-card:hover::before {
+  transform: translateX(100%);
+}
+
+/* Glassmorphism Input fields */
+.glass-input {
+  background: rgba(28, 28, 40, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  border-radius: 12px;
+  transition: all 0.2s ease-in-out;
+}
+
+.glass-input:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 15px var(--accent-blue-glow);
+  outline: none;
+  background: rgba(28, 28, 40, 0.8);
+}
+
+/* Premium Gradient CTA */
+.btn-premium {
+  background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+  color: #FFFFFF;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+  position: relative;
+  z-index: 1;
+}
+
+.btn-premium::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-blue) 100%);
+  opacity: 0;
+  z-index: -1;
+  border-radius: inherit;
+  transition: opacity 0.3s ease;
+}
+
+.btn-premium:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.btn-premium:hover::after {
+  opacity: 1;
+}
+
+/* File Drag & Drop Hover States */
+.drag-over {
+  border-color: var(--accent-blue) !important;
+  background: rgba(59, 130, 246, 0.05) !important;
+  box-shadow: 0 0 20px var(--accent-blue-glow);
+}
+
+/* Score Ring styles */
+.score-ring-circle {
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+/* Horizonal Skills Progress Bar Animation */
+@keyframes fill-bar {
+  from { width: 0%; }
+}
+
+.skill-bar-fill {
+  animation: fill-bar 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Entry Animations */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animation-delay-100 {
+  animation-delay: 100ms;
+}
+
+.animation-delay-200 {
+  animation-delay: 200ms;
+}
+
+.animation-delay-300 {
+  animation-delay: 300ms;
+}
+
+.animation-delay-400 {
+  animation-delay: 400ms;
+}

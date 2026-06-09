@@ -1,0 +1,179 @@
+@page "/"
+@inject ResumeService ResumeService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Resume Analyser — Beat the ATS Algorithm</PageTitle>
+
+<!-- Hero section -->
+<div class="text-center max-w-3xl mx-auto mb-12 animate-fade-in">
+    <h1 class="text-4xl sm:text-5xl font-syne font-extrabold text-white tracking-tight leading-none mb-4">
+        Know Your Resume.<br class="sm:hidden"/> <span class="bg-clip-text text-transparent bg-gradient-to-r from-[#3B82F6] to-[#6366F1]">Beat the Algorithm.</span>
+    </h1>
+    <p class="text-[#94A3B8] font-body text-lg max-w-xl mx-auto">
+        Verify your resume against any target job description. Uncover keywords gaps, estimate ATS scores, and get AI-powered recommendations.
+    </p>
+</div>
+
+<!-- Two-panel layout -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto animate-fade-in animation-delay-100">
+    <!-- Left panel: Upload -->
+    <div class="premium-card p-6 flex flex-col justify-between">
+        <div>
+            <div class="flex items-center gap-2 mb-4">
+                <span class="w-6 h-6 rounded bg-[#3B82F6]/10 flex items-center justify-center text-[#3B82F6] font-mono text-sm">1</span>
+                <h3 class="font-syne font-bold text-white text-lg">Upload Resume</h3>
+            </div>
+            
+            <p class="text-[#94A3B8] text-sm mb-4">Upload your resume in PDF or DOCX format (Max 5MB).</p>
+            
+            <div class="relative border-2 border-dashed border-[#1C1C28] rounded-xl p-8 flex flex-col items-center justify-center transition-all bg-[#1C1C28]/20 hover:border-[#3B82F6]/50">
+                <InputFile OnChange="HandleFileSelected" accept=".pdf,.docx" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" />
+                
+                <svg class="w-12 h-12 text-[#94A3B8] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                
+                @if (selectedFile == null)
+                {
+                    <span class="text-sm font-semibold text-white">Drag & drop your file here or <span class="text-[#3B82F6]">browse</span></span>
+                    <span class="text-xs text-[#94A3B8] mt-1 font-mono">PDF, DOCX up to 5MB</span>
+                }
+                else
+                {
+                    <div class="text-center z-30">
+                        <span class="text-sm font-semibold text-[#22C55E] block truncate max-w-[280px] mx-auto">@selectedFile.Name</span>
+                        <span class="text-xs text-[#94A3B8] font-mono block mt-1">@FormatSize(selectedFile.Size)</span>
+                    </div>
+                }
+            </div>
+            
+            @if (!string.IsNullOrEmpty(fileErrorMessage))
+            {
+                <div class="mt-3 text-xs text-[#EF4444] font-mono flex items-center gap-1.5">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span>@fileErrorMessage</span>
+                </div>
+            }
+        </div>
+        
+        <!-- API URL Configuration for Developer Testing -->
+        <div class="mt-6 border-t border-[#1C1C28] pt-4">
+            <label class="block text-xs font-mono text-[#94A3B8] mb-1.5">BACKEND API URL</label>
+            <input type="text" @bind="ResumeService.BaseUrl" class="w-full text-xs font-mono px-3 py-1.5 glass-input" />
+        </div>
+    </div>
+    
+    <!-- Right panel: Job Description -->
+    <div class="premium-card p-6 flex flex-col justify-between">
+        <div>
+            <div class="flex items-center gap-2 mb-4">
+                <span class="w-6 h-6 rounded bg-[#3B82F6]/10 flex items-center justify-center text-[#3B82F6] font-mono text-sm">2</span>
+                <h3 class="font-syne font-bold text-white text-lg">Target Job Description</h3>
+            </div>
+            
+            <p class="text-[#94A3B8] text-sm mb-4">Paste the target job description (min 100 characters).</p>
+            
+            <textarea @bind="jobDescription" @bind:event="oninput" rows="8" placeholder="Paste the job description or requirements here..." class="w-full p-4 text-sm glass-input resize-none font-body"></textarea>
+            
+            <div class="flex justify-between items-center mt-2 font-mono text-xs text-[#94A3B8]">
+                <span>Validation: @(jobDescription?.Length >= 100 ? "Ready" : "Minimum 100 chars required")</span>
+                <span>@((jobDescription ?? "").Length) chars</span>
+            </div>
+        </div>
+        
+        <div class="mt-6 pt-4 border-t border-[#1C1C28]">
+            <button @onclick="RunAnalysis" disabled="@(!CanAnalyse)" class="w-full py-3.5 btn-premium rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none">
+                <span>Analyse Resume</span>
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<footer class="mt-16 text-center text-xs font-mono text-[#94A3B8] animate-fade-in animation-delay-300">
+    Powered by Python FastAPI & Gemini AI · Deployed on Azure Static Web Apps & Render
+</footer>
+
+<LoadingOverlay IsVisible="isAnalysing" />
+
+@code {
+    private string jobDescription = string.Empty;
+    private IBrowserFile? selectedFile;
+    private string fileErrorMessage = string.Empty;
+    private bool isAnalysing = false;
+
+    private bool CanAnalyse => selectedFile != null && !string.IsNullOrEmpty(jobDescription) && jobDescription.Length >= 100 && !isAnalysing;
+
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        fileErrorMessage = string.Empty;
+        var file = e.File;
+        ValidateAndSelectFile(file);
+    }
+
+
+    private void ValidateAndSelectFile(IBrowserFile file)
+    {
+        const long maxFileSize = 5 * 1024 * 1024; // 5MB
+        var extension = System.IO.Path.GetExtension(file.Name).ToLower();
+
+        if (extension != ".pdf" && extension != ".docx")
+        {
+            fileErrorMessage = "Unsupported file type. Only PDF and DOCX files are allowed.";
+            selectedFile = null;
+            return;
+        }
+
+        if (file.Size > maxFileSize)
+        {
+            fileErrorMessage = "File size exceeds the 5MB limit.";
+            selectedFile = null;
+            return;
+        }
+
+        selectedFile = file;
+    }
+
+    private string FormatSize(long bytes)
+    {
+        string[] suffix = { "B", "KB", "MB" };
+        double dblSized = bytes;
+        int i;
+        for (i = 0; i < suffix.Length && bytes >= 1024; i++, bytes /= 1024)
+        {
+            dblSized = bytes / 1024.0;
+        }
+        return $"{dblSized:N1} {suffix[i]}";
+    }
+
+    private async Task RunAnalysis()
+    {
+        if (selectedFile == null || string.IsNullOrEmpty(jobDescription)) return;
+
+        try
+        {
+            isAnalysing = true;
+            fileErrorMessage = string.Empty;
+
+            var result = await ResumeService.AnalyseAsync(selectedFile, jobDescription);
+            
+            // Store results in the service
+            ResumeService.LastResult = result;
+            
+            // Navigate to Results page
+            NavigationManager.NavigateTo("results");
+        }
+        catch (Exception ex)
+        {
+            fileErrorMessage = $"Analysis Failed: {ex.Message}";
+        }
+        finally
+        {
+            isAnalysing = false;
+        }
+    }
+}

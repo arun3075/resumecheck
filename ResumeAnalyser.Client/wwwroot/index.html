@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resume Analyser — Beat the ATS Algorithm</title>
+    <base href="/" />
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bgPrimary: '#0A0A0F',
+                        bgCard: '#12121A',
+                        bgElevated: '#1C1C28',
+                        accentBlue: '#3B82F6',
+                        success: '#22C55E',
+                        warning: '#F59E0B',
+                        danger: '#EF4444',
+                        textPrimary: '#F1F5F9',
+                        textSecondary: '#94A3B8'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom CSS containing fonts and specific layout rules -->
+    <link href="css/app.css" rel="stylesheet" />
+</head>
+
+<body class="bg-[#0A0A0F] text-[#F1F5F9]">
+    <div id="app">
+        <!-- Beautiful spinner during WASM runtime initial download -->
+        <div class="flex flex-col items-center justify-center min-h-screen bg-[#0A0A0F]">
+            <div class="w-12 h-12 rounded-full border-4 border-[#1C1C28] border-t-[#3B82F6] animate-spin mb-4"></div>
+            <div class="font-syne text-lg font-bold tracking-wider text-white">RESUME<span class="text-[#3B82F6]">ANALYSER</span></div>
+            <div class="text-xs text-[#94A3B8] font-mono mt-1">Booting WASM environment...</div>
+        </div>
+    </div>
+
+    <!-- Error container -->
+    <div id="blazor-error-ui" class="hidden fixed bottom-0 left-0 right-0 bg-[#12121A] border-t border-[#EF4444] text-[#F1F5F9] px-4 py-3 z-50 flex justify-between items-center text-sm font-mono">
+        <div>
+            An unhandled error has occurred.
+            <a href="" class="reload text-[#3B82F6] underline ml-2">Reload</a>
+        </div>
+        <a class="dismiss cursor-pointer text-[#94A3B8] hover:text-white text-lg">🗙</a>
+    </div>
+    
+    <!-- JS Helper to trigger binary file downloads in Blazor WASM -->
+    <script>
+        window.downloadFileFromStream = async (fileName, byteBase64) => {
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = "data:application/pdf;base64," + byteBase64;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+
+    <script src="_framework/blazor.webassembly.js"></script>
+</body>
+
+</html>

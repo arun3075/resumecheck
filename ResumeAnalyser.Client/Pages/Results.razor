@@ -1,0 +1,301 @@
+@page "/results"
+@inject ResumeService ResumeService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JS
+
+<PageTitle>Analysis Dashboard — Resume Analyser</PageTitle>
+
+@if (result == null)
+{
+    <div class="text-center py-20 animate-fade-in max-w-md mx-auto">
+        <div class="w-16 h-16 rounded-full bg-[#EF4444]/10 text-[#EF4444] flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+        </div>
+        <h3 class="text-xl font-bold font-syne text-white mb-2">No Analysis Data</h3>
+        <p class="text-[#94A3B8] mb-6 font-body text-sm">You haven't uploaded a resume yet. Let's get your resume analyzed first!</p>
+        <button @onclick="GoBack" class="px-6 py-3 btn-premium rounded-xl font-semibold text-sm">
+            Go to Upload
+        </button>
+    </div>
+}
+else
+{
+    <div class="max-w-6xl mx-auto animate-fade-in">
+        <!-- Dashboard Top Header Bar -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+                <span class="text-xs font-mono text-[#3B82F6] tracking-widest uppercase">ATS Scan Diagnostic</span>
+                <h1 class="text-3xl font-syne font-extrabold text-white mt-1">Analysis Dashboard</h1>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <button @onclick="GoBack" class="px-4 py-2.5 rounded-xl border border-[#1C1C28] bg-[#12121A] text-sm text-[#94A3B8] hover:text-white hover:border-[#3B82F6]/30 transition-all font-semibold">
+                    Analyse Another
+                </button>
+                <button @onclick="DownloadPDFReport" disabled="@isDownloading" class="px-5 py-2.5 rounded-xl btn-premium text-sm font-semibold flex items-center gap-2">
+                    @if (isDownloading)
+                    {
+                        <div class="w-4 h-4 rounded-full border-2 border-white/20 border-t-white animate-spin"></div>
+                        <span>Generating...</span>
+                    }
+                    else
+                    {
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span>Download Report</span>
+                    }
+                </button>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="mb-6 p-4 rounded-xl border border-[#EF4444]/20 bg-[#EF4444]/5 text-xs text-[#EF4444] font-mono flex items-center gap-2">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>@errorMessage</span>
+            </div>
+        }
+
+        <!-- Dashboard Layout Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            
+            <!-- Left Column: Circular Score & Executive Summary -->
+            <div class="premium-card p-6 flex flex-col justify-between items-center text-center lg:col-span-1">
+                <div class="w-full">
+                    <h3 class="font-syne font-bold text-white text-base text-left mb-6">ATS Match Score</h3>
+                    
+                    <!-- SVG Circular Progress Ring -->
+                    <div class="relative w-40 h-40 mx-auto flex items-center justify-center my-4">
+                        <svg class="w-full h-full">
+                            <!-- Background track circle -->
+                            <circle cx="80" cy="80" r="70" class="stroke-[#1C1C28]" stroke-width="8" fill="transparent" />
+                            <!-- Active progress circle -->
+                            <circle cx="80" cy="80" r="70" 
+                                    class="score-ring-circle" 
+                                    stroke="@ScoreColorHex" 
+                                    stroke-width="8" 
+                                    fill="transparent" 
+                                    stroke-dasharray="440" 
+                                    stroke-dashoffset="@DashOffset" 
+                                    stroke-linecap="round" />
+                        </svg>
+                        <!-- Center Score Label -->
+                        <div class="absolute flex flex-col items-center justify-center">
+                            <span class="text-4xl font-syne font-extrabold text-white tracking-tight leading-none">@animatedScore%</span>
+                            <span class="text-xxs font-mono uppercase tracking-wider mt-1" style="color: @ScoreColorHex">@result.MatchLabel</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="w-full mt-6 border-t border-[#1C1C28] pt-4 text-left">
+                    <h4 class="text-xs font-mono text-[#94A3B8] mb-1">EXECUTIVE SUMMARY</h4>
+                    <p class="text-[#F1F5F9] text-sm font-body leading-relaxed">@result.Summary</p>
+                </div>
+            </div>
+
+            <!-- Right Column: Keyword Matching pills -->
+            <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Matched Keywords Card -->
+                <div class="premium-card p-6 flex flex-col">
+                    <div class="flex items-center justify-between mb-4 border-b border-[#1C1C28] pb-3">
+                        <h3 class="font-syne font-bold text-white text-base flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-[#22C55E]"></span>
+                            Matched Keywords
+                        </h3>
+                        <span class="text-xs font-mono text-[#22C55E] bg-[#22C55E]/10 px-2 py-0.5 rounded-full">@result.MatchedKeywords.Count found</span>
+                    </div>
+                    
+                    <div class="flex-grow overflow-y-auto max-h-[180px] pr-1">
+                        @if (result.MatchedKeywords.Count == 0)
+                        {
+                            <span class="text-xs font-mono text-[#94A3B8]">No matching keywords detected.</span>
+                        }
+                        else
+                        {
+                            <div class="flex flex-wrap gap-2">
+                                @foreach (var kw in result.MatchedKeywords)
+                                {
+                                    <span class="px-2.5 py-1 text-xs font-mono rounded-lg bg-[#22C55E]/5 border border-[#22C55E]/15 text-[#22C55E]">@kw</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Missing Keywords Card -->
+                <div class="premium-card p-6 flex flex-col">
+                    <div class="flex items-center justify-between mb-4 border-b border-[#1C1C28] pb-3">
+                        <h3 class="font-syne font-bold text-white text-base flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-[#EF4444]"></span>
+                            Missing Keywords
+                        </h3>
+                        <span class="text-xs font-mono text-[#EF4444] bg-[#EF4444]/10 px-2 py-0.5 rounded-full">@result.MissingKeywords.Count missing</span>
+                    </div>
+                    
+                    <div class="flex-grow overflow-y-auto max-h-[180px] pr-1">
+                        @if (result.MissingKeywords.Count == 0)
+                        {
+                            <span class="text-xs font-mono text-[#22C55E]">Zero missing keywords! Excellent match.</span>
+                        }
+                        else
+                        {
+                            <div class="flex flex-wrap gap-2">
+                                @foreach (var kw in result.MissingKeywords)
+                                {
+                                    <span class="px-2.5 py-1 text-xs font-mono rounded-lg bg-[#EF4444]/5 border border-[#EF4444]/15 text-[#F59E0B]">@kw</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Skills Gap & Recommendations -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Skill Gap Bar Chart -->
+            <div class="premium-card p-6">
+                <h3 class="font-syne font-bold text-white text-base mb-6 border-b border-[#1C1C28] pb-3">Skills Comparison</h3>
+                
+                @if (result.SkillScores == null || result.SkillScores.Count == 0)
+                {
+                    <p class="text-xs font-mono text-[#94A3B8]">No skill breakdown available.</p>
+                }
+                else
+                {
+                    <div class="space-y-4">
+                        @foreach (var skill in result.SkillScores)
+                        {
+                            <div>
+                                <div class="flex justify-between items-center text-xs font-mono text-[#94A3B8] mb-1">
+                                    <span class="text-[#F1F5F9] font-medium">@skill.Key</span>
+                                    <span>@skill.Value%</span>
+                                </div>
+                                <div class="w-full h-2 rounded-full bg-[#1C1C28] overflow-hidden">
+                                    <!-- Dynamic bar fill width with CSS custom duration -->
+                                    <div class="h-full rounded-full skill-bar-fill"
+                                         style="width: @(skill.Value)%; background: @GetSkillColorHex(skill.Value)">
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- AI-Powered Recommendations -->
+            <div class="premium-card p-6">
+                <h3 class="font-syne font-bold text-white text-base mb-4 border-b border-[#1C1C28] pb-3">Recommendations</h3>
+                
+                @if (result.Recommendations == null || result.Recommendations.Count == 0)
+                {
+                    <p class="text-xs font-mono text-[#94A3B8]">No recommendations generated.</p>
+                }
+                else
+                {
+                    <ol class="space-y-3">
+                        @foreach (var rec in result.Recommendations.Select((value, index) => new { value, index }))
+                        {
+                            <li class="flex items-start gap-3 text-sm">
+                                <span class="flex-shrink-0 w-6 h-6 rounded-lg bg-[#3B82F6]/10 text-[#3B82F6] font-mono text-xs flex items-center justify-center font-bold">
+                                    @(rec.index + 1)
+                                </span>
+                                <span class="text-[#94A3B8] font-body leading-tight pt-0.5">@rec.value</span>
+                            </li>
+                        }
+                    </ol>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private AnalysisResult? result;
+    private bool isDownloading = false;
+    private string errorMessage = string.Empty;
+
+    // SVG parameters
+    // Radius r = 70, Circumference C = 2 * pi * r = 439.8 ≈ 440
+    private int animatedScore = 0;
+    private double DashOffset => 440 - (440 * animatedScore / 100);
+
+    private string ScoreColorHex =>
+        animatedScore >= 80 ? "#22C55E" :
+        animatedScore >= 60 ? "#F59E0B" :
+        "#EF4444";
+
+    protected override async Task OnInitializedAsync()
+    {
+        result = ResumeService.LastResult;
+        
+        if (result != null)
+        {
+            // Simple animated score increment
+            await AnimateScore();
+        }
+    }
+
+    private async Task AnimateScore()
+    {
+        if (result == null) return;
+        
+        int targetScore = result.MatchScore;
+        animatedScore = 0;
+        
+        // Stagger increments
+        while (animatedScore < targetScore)
+        {
+            animatedScore += Math.Min(2, targetScore - animatedScore);
+            StateHasChanged();
+            await Task.Delay(15);
+        }
+    }
+
+    private string GetSkillColorHex(int value)
+    {
+        if (value >= 80) return "linear-gradient(90deg, #22C55E, #10B981)";
+        if (value >= 60) return "linear-gradient(90deg, #F59E0B, #D97706)";
+        return "linear-gradient(90deg, #EF4444, #DC2626)";
+    }
+
+    private void GoBack()
+    {
+        ResumeService.LastResult = null;
+        NavigationManager.NavigateTo("");
+    }
+
+    private async Task DownloadPDFReport()
+    {
+        if (result == null || isDownloading) return;
+
+        try
+        {
+            isDownloading = true;
+            errorMessage = string.Empty;
+
+            // Call backend PDF generator endpoint
+            var pdfBytes = await ResumeService.DownloadReportAsync(result);
+
+            // Convert to base64 to send to Javascript
+            var base64 = Convert.ToBase64String(pdfBytes);
+            var filename = $"resume-analysis-{result.MatchScore}.pdf";
+
+            // Trigger JS helper for file download
+            await JS.InvokeVoidAsync("downloadFileFromStream", filename, base64);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Download failed: {ex.Message}";
+        }
+        finally
+        {
+            isDownloading = false;
+        }
+    }
+}

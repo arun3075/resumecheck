@@ -1,0 +1,76 @@
+@implements IDisposable
+
+@if (IsVisible)
+{
+    <div class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0A0A0F]/90 backdrop-blur-md transition-opacity duration-300">
+        <div class="relative flex items-center justify-center mb-8">
+            <!-- Outer spinning glow ring -->
+            <div class="w-24 h-24 rounded-full border-2 border-t-[#3B82F6] border-r-transparent border-b-[#6366F1] border-l-transparent animate-spin duration-1000"></div>
+            <!-- Inner pulse circle -->
+            <div class="absolute w-16 h-16 rounded-full bg-gradient-to-tr from-[#3B82F6] to-[#6366F1] opacity-20 animate-ping"></div>
+            <!-- Center logo icon -->
+            <div class="absolute w-14 h-14 rounded-full bg-[#12121A] border border-[#1C1C28] flex items-center justify-center">
+                <svg class="w-6 h-6 text-[#3B82F6] animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+            </div>
+        </div>
+        
+        <h2 class="text-xl font-syne font-bold text-white tracking-wide mb-2">Analyzing Resume</h2>
+        <p class="text-[#94A3B8] font-mono text-sm tracking-wider min-h-[20px] transition-all duration-300">
+            @currentStatus
+        </p>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    private string currentStatus = "Parsing resume...";
+    private System.Threading.Timer? timer;
+    private int statusIndex = 0;
+    private readonly string[] statusMessages = {
+        "Parsing resume...",
+        "Extracting keyword metrics...",
+        "Analysing with AI...",
+        "Evaluating skill match...",
+        "Generating final report..."
+    };
+
+    protected override void OnParametersSet()
+    {
+        if (IsVisible)
+        {
+            statusIndex = 0;
+            currentStatus = statusMessages[statusIndex];
+            StartTimer();
+        }
+        else
+        {
+            StopTimer();
+        }
+    }
+
+    private void StartTimer()
+    {
+        timer?.Dispose();
+        timer = new System.Threading.Timer(_ =>
+        {
+            statusIndex = (statusIndex + 1) % statusMessages.Length;
+            currentStatus = statusMessages[statusIndex];
+            InvokeAsync(StateHasChanged);
+        }, null, 2000, 2000);
+    }
+
+    private void StopTimer()
+    {
+        timer?.Dispose();
+        timer = null;
+    }
+
+    public void Dispose()
+    {
+        StopTimer();
+    }
+}
